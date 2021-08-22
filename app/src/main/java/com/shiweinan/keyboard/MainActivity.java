@@ -35,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
                 .commit();
 
         Settings.setContext(this);
+        TcpSocketServer.startListen();
 
         /*BottomNavigationView navigation = findViewById(R.id.navigation);
         final Intent intent = new Intent(this, SettingsActivity.class);

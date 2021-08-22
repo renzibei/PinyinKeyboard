@@ -3,6 +3,8 @@ package com.shiweinan.keyboard;
 import android.inputmethodservice.InputMethodService;
 import android.inputmethodservice.Keyboard;
 import android.inputmethodservice.KeyboardView;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -10,14 +12,20 @@ import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
+import static android.graphics.Color.BLACK;
+import static android.graphics.Color.GRAY;
+import static android.graphics.Color.WHITE;
 
 public class IMEService extends InputMethodService implements KeyboardView.OnKeyboardActionListener {
     private StoneKeyboardView mKeyboardView;
@@ -31,8 +39,15 @@ public class IMEService extends InputMethodService implements KeyboardView.OnKey
     private PredictAlgorithm predictAlgorithm;
     private TouchModel touchModel;
 
+    static private IMEService _instance;
+
+    static IMEService getInstance() {
+        return _instance;
+    }
+
     @Override
     public View onCreateCandidatesView(){
+        _instance = this;
         Log.d(this.getClass().toString(), "onCreateCandidatesView: ");
         //mCandidateContainer = new CandidateView(this);
         mCandidateContainer = new CandidatesContainer(this);
@@ -48,6 +63,7 @@ public class IMEService extends InputMethodService implements KeyboardView.OnKey
 
     @Override
     public View onCreateInputView() {
+        _instance = this;
         //mKeyboardView = (KeyboardView)getLayoutInflater().inflate(R.layout.keyboard,null);
         mKeyboardView = new StoneKeyboardView(getApplicationContext(), null, this);
         mKeyboard = new Keyboard(this, R.xml.qwerty);
@@ -72,6 +88,57 @@ public class IMEService extends InputMethodService implements KeyboardView.OnKey
         }
         return ' ';
     }
+
+    public static void setHighlightWord(final int index) {
+        Handler mainHandler = new Handler(Looper.getMainLooper());
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (index >= 0 && index <= 4) {
+                    getInstance().mCandidateContainer.setHighlightCandidate(index);
+                }
+            }
+        });
+    }
+
+    public static void updateHintWords(final String[] hintWords) {
+        Handler mainHandler = new Handler(Looper.getMainLooper());
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                IMEService instance = getInstance();
+                instance.pinyinList.clear();
+                instance.pinyinList.addAll(Arrays.asList(hintWords));
+                instance.mCandidateContainer.setSuggestions(instance.pinyinList);
+                instance.setCandidatesViewShown(true);
+            }
+        });
+
+    }
+
+    public static void addCommitWord(final String word) {
+        Handler mainHandler = new Handler(Looper.getMainLooper());
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                IMEService instance = getInstance();
+                instance.getCurrentInputConnection().commitText(word + " ", 1);
+            }
+        });
+    }
+
+    public static void deleteInputChars(final int charNum) {
+        Handler mainHandler = new Handler(Looper.getMainLooper());
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                IMEService instance = getInstance();
+                instance.getCurrentInputConnection().deleteSurroundingText(charNum, 0);
+            }
+        });
+    }
+
+
     private void updateCandidates() {
         String ret = "";
         List<String> seg = predictAlgorithm.predict(touchPoints);

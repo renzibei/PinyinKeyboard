@@ -29,6 +29,7 @@ public class CandidateView extends View {
     private static final int X_GAP = 10;    // 每个候选之间的间隔
     private Paint mPaint;                   // 用于绘制候选
     private int mCandidateVPadding;         // 候选文字上下边距
+    private int highLightIndex; // 高亮候选词的Index
     private IMEService service;
     public CandidateView(Context context) {
         super(context);
@@ -45,6 +46,7 @@ public class CandidateView extends View {
     private void init(Context context) {
         Resources r = context.getResources();
         mCandidateVPadding = r.getDimensionPixelSize(R.dimen.candidateVerticalPadding);
+        highLightIndex = 0;
         setBackgroundColor(r.getColor(R.color.candidateBackground, null)); // 设置背景色
         mPaint = new Paint();
         mPaint.setColor(r.getColor(R.color.candidate, null));               // 设置前景色
@@ -53,6 +55,21 @@ public class CandidateView extends View {
         mPaint.setStrokeWidth(1);
         setWillNotDraw(false);  // 覆盖了onDraw函数应清除该标记
     }
+
+    private static int GetHighlightColor() {
+        return Color.parseColor("#FF9912");
+    }
+
+    private static int GetNormalColor() {
+        return Color.parseColor("#FFFFFF");
+    }
+
+    public void setHighLightCandidateIndex(int index) {
+        highLightIndex = index;
+        invalidate();
+        requestLayout();
+    }
+
     public void setService(IMEService s) {
         service = s;
     }
@@ -83,6 +100,12 @@ public class CandidateView extends View {
         for (int i = 0; i < count; i++) {
             String suggestion = mSuggestions.get(i);
             float textWidth = mPaint.measureText(suggestion);
+            if (i == highLightIndex) {
+                mPaint.setColor(GetHighlightColor());
+            }
+            else {
+                mPaint.setColor(GetNormalColor());
+            }
             final int wordWidth = (int) textWidth + X_GAP * 2;
             if (x + wordWidth > 1080) {
                 y += (int)(mPaint.getTextSize() - mPaint.ascent());

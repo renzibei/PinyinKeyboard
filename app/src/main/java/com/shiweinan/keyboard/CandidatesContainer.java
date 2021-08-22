@@ -34,6 +34,11 @@ public class CandidatesContainer extends RelativeLayout {
         //candidatePage = findViewById(R.id.candidatePage);
         //candidatePage.setVisibility(INVISIBLE);
     }
+
+    public void setHighlightCandidate(int index) {
+        candidateView.setHighLightCandidateIndex(index);
+    }
+
     public void setSuggestions(List<String> suggestion) {
         candidateView.setSuggestions(suggestion);
     }
